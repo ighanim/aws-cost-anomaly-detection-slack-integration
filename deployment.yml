@@ -33,7 +33,7 @@ Resources:
           Resource: "*"
           Condition:
             StringEquals:
-             'aws:ResourceTag/auto-restart-protection': 'yes'
+             'secretsmanager:SecretId': !Ref SlackWebhookURLSecret
       Roles:
       - Ref: CostAnomalyToSlackLambdaRole
 
