@@ -1,0 +1,141 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| Resource                                | Type                     | Description                                                                                                                                                                   |
+#+=========================================+==========================+===============================================================================================================================================================================+
+#| CostAnomalyToSlackLambdaPolicy  | AWS::IAM::ManagedPolicy  | Allows rds:AddTagsToResource, rds:ListTagsForResource, rds:DescribeDBInstances and states:StartExecution for any resource. Linked with CostAnomalyToSlackLambdaRole.  |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| StopRdsInstanceLambdaPolicy             | AWS::IAM::ManagedPolicy  | Allows rds:AddTagsToResource, rds:ListTagsForResource, rds:DescribeDBInstances, rds:StopDBInstance for any resource. Linked with StopRdsInstanceLambdaRole.                   |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| RetrieveRdsInstanceStateLambdaPolicy    | AWS::IAM::ManagedPolicy  | Allows rds:AddTagsToResource, rds:ListTagsForResource and rds:DescribeDBInstances for any resource. Linked with RetrieveRdsInstanceStateLambdaRole.                           |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| CostAnomalyToSlackLambdaRole    | AWS::IAM::Role           | Lambda basic execution role.To be assumed by CostAnomalyToSlackLambda                                                                                                 |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| StopRdsInstanceLambdaRole               | AWS::IAM::Role           | Lambda basic execution role. To be assumed by RetrieveRdsInstanceStateLambda                                                                                                  |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| RetrieveRdsInstanceStateLambdaRole      | AWS::IAM::Role           | Lambda basic execution role. To be assumed by StopRdsInstanceLambda                                                                                                           |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+#| StopRdsInstanceStateMachineRole         | AWS::IAM::Role           | Allows lambda:InvokeFunction and multiple log: operations. To be assumed by StepFunction                                                                                      |
+#+─────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────+
+
+ 
+  GetSecretValueLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: "*"
+          Condition:
+            StringEquals:
+             'aws:ResourceTag/auto-restart-protection': 'yes'
+      Roles:
+      - Ref: CostAnomalyToSlackLambdaRole
+
+  CostAnomalyToSlackLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: "/"
+      Tags:
+      - Key: Project
+        Value: RdsAutoRestartProtection
+
+
+#+───────────────────────────────+──────────────────+───────────────────────────────────────────────────+
+#| Resource                      | Type             | Description                                       |
+#+===============================+==================+===================================================+
+#| SnsTopicCostAnomaly           | AWS::SNS::Topic  | This is where the RDS restart event is pushed     |
+#+───────────────────────────────+──────────────────+───────────────────────────────────────────────────+
+#| SnsTopicWorkFlowNotification  | AWS::SNS::Topic  | This is where the execution notification is sent  |
+#+───────────────────────────────+──────────────────+───────────────────────────────────────────────────+
+
+  SnsTopicCostAnomaly:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Endpoint:
+          Fn::GetAtt:
+          - CostAnomalyToSlackLambda
+          - Arn
+        Protocol: lambda
+      Tags:
+      - Key: Project
+        Value: RdsAutoRestartProtection
+    DependsOn:
+    - CostAnomalyToSlackLambda
+
+#+────────────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────+
+#| Resource                                       | Type                     | Description                                                           |
+#+================================================+==========================+=======================================================================+
+#| CostAnomalyToSlackLambda               | AWS::Lambda::Function    | Lambda function to start the Step Functions state machine execution.  |
+#+────────────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────+
+#| CostAnomalyToSlackLambdaSnsPermission  | AWS::Lambda::Permission  | Permission for SNS to invoke CostAnomalyToSlackLambda         |
+#+────────────────────────────────────────────────+──────────────────────────+───────────────────────────────────────────────────────────────────────+
+
+
+  CostAnomalyToSlackLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: s3Bucket
+        S3Key: cost-anomaly-to-slack.zip
+      Description: Lambda Function to Send Cost Anomaly Events to Slack Webhook
+      Handler: lambda_function.lambda_handler
+      Environment:
+        Variables:
+          AWS_REGION:
+            Ref: "AWS::Region"
+      Role:
+        Fn::GetAtt:
+        - CostAnomalyToSlackLambdaRole
+        - Arn
+      Runtime: python3.7
+      Tags:
+      - Key: Project
+        Value: RdsAutoRestartProtection
+  CostAnomalyToSlackLambdaSnsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: SnsTopicCostAnomaly
+      FunctionName:
+        Fn::GetAtt:
+        - CostAnomalyToSlackLambda
+        - Arn
+  SlackWebhookURLSecret:        
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Name: anomaly-detection-slack-webhook-url
+      SecretString: !Sub
+      - '{"anomaly-detection-slack-webhook-url": "${secret}"}'
+      - { secret: !Ref SlackWebhookURL }  
+      Tags: 
+      - Key: Project
+        Value: RdsAutoRestartProtection
+
+Parameters:
+  s3Bucket:
+    Type: String
+    Description: S3 Bucket where your Lambda functions and StepFunctions state machines    are stored.
+  SlackWebhookURL:
+    Type: String
+    Description: Slack Webhook URL.
