@@ -98,10 +98,6 @@ Resources:
         S3Key: cost-anomaly-to-slack.zip
       Description: Lambda Function to Send Cost Anomaly Events to Slack Webhook
       Handler: lambda_function.lambda_handler
-      Environment:
-        Variables:
-          AWS_REGION:
-            Ref: "AWS::Region"
       Role:
         Fn::GetAtt:
         - CostAnomalyToSlackLambdaRole
