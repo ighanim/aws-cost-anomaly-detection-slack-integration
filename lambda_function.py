@@ -3,12 +3,13 @@ from slack_sdk.webhook import WebhookClient
 import boto3
 import base64
 from botocore.exceptions import ClientError
+import os
 
 
 def get_secret():
 
     secret_name = "anomaly-detection-slack-webhook-url"
-    region_name = "us-east-1"
+    region_name = region = os.environ['AWS_REGION']
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
