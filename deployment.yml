@@ -68,7 +68,8 @@ Resources:
     Properties: 
       PolicyDocument: 
         {
-          "Statement": [{
+          "Statement": [
+            {
             "Effect": "Allow",
             "Principal": { 
               "Service": "costalerts.amazonaws.com" 
@@ -80,7 +81,25 @@ Resources:
                   "AWS:SourceOwner": !Ref sourceAccount
                   }
                   }
-                  }]}
+            },
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+
+              },
+              "Action": "sns:Subscribe",
+              "Resource": !Ref SnsTopicCostAnomaly,
+              "Condition": {
+                "StringEquals": {
+                  "lambda:FunctionArn": !Ref CostAnomalyToSlackLambda
+                }
+
+              }
+            }
+            ]
+        }
+                  
       Topics: 
       - !Ref SnsTopicCostAnomaly
 
