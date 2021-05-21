@@ -118,17 +118,20 @@ def lambda_handler(event, context):
     #MessageFormatting - Keep Appending the blocks object. Order is important here.
     #First, Populating the 'Text' Object that is a subset of the Block object. 
     headerText = Text("plain_text", ":warning: Cost Anomaly Detected ", emoji = True)
-    totalAnomalyCost = Text("mrkdwn", "*Total Anomaly Cost*: $" + str(totalcostImpact))
+    totalAnomalyCostText = Text("mrkdwn", "*Total Anomaly Cost*: $" + str(totalcostImpact))
     rootCausesHeaderText = Text("mrkdwn", "*Root Causes* :mag:")
+    anomalyStartDateText = Text("mrkdwn", "*Anomaly Start Date*: " + str(anomalyStartDate))
+    anomalyEndDateText = Text("mrkdwn", "*Anomaly End Date*: " + str(anomalyEndDate))
+    anomalyDetailsLinkText = Text("mrkdwn", "*Anomaly Details Link*: " + str(anomalyDetailsLink))
     
 
     #Second, Start appending the 'blocks' object with the header, totalAnomalyCost and rootCausesHeaderText
     blocks.append(Block("header", text=headerText.__dict__))
-    blocks.append(Block("section", text=totalAnomalyCost.__dict__))
-    blocks.append(Block("section", text=anomalyStartDate.__dict__))
-    blocks.append(Block("section", text=anomalyEndDate.__dict__))
+    blocks.append(Block("section", text=totalAnomalyCostText.__dict__))
+    blocks.append(Block("section", text=anomalyStartDateText.__dict__))
+    blocks.append(Block("section", text=anomalyEndDateText.__dict__))
+    blocks.append(Block("section", text=anomalyDetailsLinkText.__dict__))
     blocks.append(Block("section", text=rootCausesHeaderText.__dict__))
-    blocks.append(Block("section", text=anomalyDetailsLink.__dict__))
     
     #Third, iterate through all possible root causes in the Anomaly Event and append the blocks as well as fields objects. 
     for rootCause in anomalyEvent["rootCauses"]:
