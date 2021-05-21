@@ -106,6 +106,9 @@ def lambda_handler(event, context):
     #Anomaly Detection Interval
     anomalyStartDate =  anomalyEvent["anomalyStartDate"]
     anomalyEndDate = anomalyEvent["anomalyEndDate"]
+    
+    #anomalyDetailsLink
+    anomalyDetailsLink = anomalyEvent["anomalyDetailsLink"]
    
     #Now, will start building the Slack Message. 
     #Blocks is the main array that holds the full message.
@@ -117,13 +120,15 @@ def lambda_handler(event, context):
     headerText = Text("plain_text", ":warning: Cost Anomaly Detected ", emoji = True)
     totalAnomalyCost = Text("mrkdwn", "*Total Anomaly Cost*: $" + str(totalcostImpact))
     rootCausesHeaderText = Text("mrkdwn", "*Root Causes* :mag:")
-    
+    anomalyDetailsLink = 
+
     #Second, Start appending the 'blocks' object with the header, totalAnomalyCost and rootCausesHeaderText
     blocks.append(Block("header", text=headerText.__dict__))
     blocks.append(Block("section", text=totalAnomalyCost.__dict__))
     blocks.append(Block("section", text=anomalyStartDate.__dict__))
     blocks.append(Block("section", text=anomalyEndDate.__dict__))
     blocks.append(Block("section", text=rootCausesHeaderText.__dict__))
+    blocks.append(Block("section", text=anomalyDetailsLink.__dict__))
     
     #Third, iterate through all possible root causes in the Anomaly Event and append the blocks as well as fields objects. 
     for rootCause in anomalyEvent["rootCauses"]:
