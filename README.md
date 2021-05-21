@@ -1,1 +1,1 @@
-# aws-cost-anomaly-detection-slack-integration
+# AWS Cost Anomaly Detection Slack Integration
