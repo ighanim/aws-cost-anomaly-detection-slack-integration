@@ -90,7 +90,10 @@ Resources:
                 "Service": "lambda.amazonaws.com"
 
               },
-              "Action": "sns:Subscribe",
+              "Action": [
+                "sns:Subscribe",
+                "sns:Receive"
+                ],
               "Resource": !Ref SnsTopicCostAnomaly,
               "Condition": {
                 "StringEquals": {
