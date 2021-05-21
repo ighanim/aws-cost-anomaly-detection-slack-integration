@@ -120,7 +120,7 @@ def lambda_handler(event, context):
     headerText = Text("plain_text", ":warning: Cost Anomaly Detected ", emoji = True)
     totalAnomalyCost = Text("mrkdwn", "*Total Anomaly Cost*: $" + str(totalcostImpact))
     rootCausesHeaderText = Text("mrkdwn", "*Root Causes* :mag:")
-    anomalyDetailsLink = 
+    
 
     #Second, Start appending the 'blocks' object with the header, totalAnomalyCost and rootCausesHeaderText
     blocks.append(Block("header", text=headerText.__dict__))
