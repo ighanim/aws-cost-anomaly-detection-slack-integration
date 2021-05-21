@@ -63,6 +63,29 @@ Resources:
     DependsOn:
     - CostAnomalyToSlackLambda
 
+  SnsTopicPolicyCostAnomaly:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      PolicyDocument: 
+        {
+          "Statement": [{
+            "Effect": "Allow",
+            "Principal": { 
+              "Service": "costalerts.amazonaws.com" 
+              },
+              "Action": "sns:Publish",
+              "Resource": !Ref SnsTopicCostAnomaly ,
+              "Condition": {
+                "StringEquals": {
+                  "AWS:SourceOwner": !Ref sourceAccount
+                  }
+                  }
+                  }]
+                  }
+      Topics: 
+      - !Ref SnsTopicCostAnomaly
+
+
 #| Resource                              | Type                    | Description                                            |
 #|---------------------------------------|-------------------------|--------------------------------------------------------|
 #| CostAnomalyToSlackLambda              | AWS::Lambda::Function   | Main Lambda Function that will call Slack Webhooks API |
@@ -119,6 +142,9 @@ Resources:
 #| slackWebhookURL | String | Slack channel webhook URL. If you don't have one already, check https://api.slack.com/messaging/webhooks. |
 
 Parameters:
+  sourceAccount:
+    Type: String
+    Description: Enter the 11-digit AWS Account Number of the cost anomaly notification subscription. If you would like to aggregate data across all of your accounts, enter the Payer/Management account number. Else, if you would like to receive notifications of a specific member account (be it this account), enter the account number. 
   s3Bucket:
     Type: String
     Description: S3 Bucket where your Lambda functions and StepFunctions state machines    are stored.
