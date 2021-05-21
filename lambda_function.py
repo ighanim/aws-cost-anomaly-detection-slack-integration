@@ -111,7 +111,7 @@ def lambda_handler(event, context):
     anomalyDetailsLink = anomalyEvent["anomalyDetailsLink"]
    
     #Now, will start building the Slack Message. 
-    #Blocks is the main array that holds the full message.
+    #Blocks is the main array thagit git holds the full message.
     #Instantiate an Object of the Class Block
     blocks = []
     
