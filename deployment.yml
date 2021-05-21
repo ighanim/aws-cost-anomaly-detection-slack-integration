@@ -94,10 +94,7 @@ Resources:
               "Resource": !Ref SnsTopicCostAnomaly,
               "Condition": {
                 "StringEquals": {
-                  "lambda:FunctionArn":
-                    Fn::GetAtt:
-                      - CostAnomalyToSlackLambda
-                      - Arn
+                  "lambda:FunctionArn": !GetAtt CostAnomalyToSlackLambda.Arn
                 }
 
               }
