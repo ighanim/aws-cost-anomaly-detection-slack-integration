@@ -1,10 +1,14 @@
 version: 0.2
 phases:
+  prebuild:
+    commands:
+      - echo "Nothing in the pre-build phase."
   build:
     commands:
+      - echo "Entering build phase. Will zip the lambda files and create a package."
       - zip ./lambda-code-v0.0.2.zip lambda_function.py slack_sdk/ -r
 artifacts:
   files:
     - lambda-code-v0.0.2.zip
     - deployment.yml
-  name: $AWS_REGION-$(date +%Y-%m-%d) 
+  name: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_ID
