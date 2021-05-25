@@ -6,7 +6,7 @@ phases:
   build:
     commands:
       - echo "Entering build phase. Will zip the lambda files and create a package."
-      - zip ./lambda-code-v0.0.2.zip lambda_function.py slack_sdk/ -r
+      - zip ./lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip lambda_function.py slack_sdk/ -r
 artifacts:
   files:
     - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
