@@ -9,6 +9,6 @@ phases:
       - zip ./lambda-code-v0.0.2.zip lambda_function.py slack_sdk/ -r
 artifacts:
   files:
-    - lambda-code-v0.0.2.zip
+    - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
     - deployment.yml
   name: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_ID
