@@ -1,0 +1,9 @@
+version: 0.2
+phases:
+  build:
+    commands:
+      - zip ./lambda-code-v0.0.1.zip lambda_function.py slack_sdk/ -r
+artifacts:
+  files:
+    - '**/*'
+  name: $AWS_REGION-$(date +%Y-%m-%d) 
