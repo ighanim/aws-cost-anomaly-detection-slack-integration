@@ -1,6 +1,6 @@
 version: 0.2
 phases:
-  prebuild:
+  pre_build:
     commands:
       - echo "Nothing in the pre-build phase."
   build:
