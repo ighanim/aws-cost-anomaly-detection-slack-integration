@@ -13,7 +13,7 @@ Resources:
       Type: AWS::Lambda::Function
       Properties:
         Name: "cad-CostAnomalyToSlackLambda-2CREMuSJX4D0" # Specify the name of your Lambda function
-        Alias: "cad-alias" # Specify the alias for your Lambda function
+        Alias: "prod" # Specify the alias for your Lambda function
         CurrentVersion: "3" # Specify the current version of your Lambda function
         TargetVersion: "2" # Specify the version of your Lambda function to deploy
 # (Optional) In the Hooks section, specify a validation Lambda function to run during 
