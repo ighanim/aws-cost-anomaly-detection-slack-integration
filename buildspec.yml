@@ -12,4 +12,4 @@ artifacts:
     - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
     - deployment.yml
     - appspec.yml
-  name: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_ID
+  name: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_NUMBER
