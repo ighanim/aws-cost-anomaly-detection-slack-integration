@@ -104,7 +104,7 @@ Resources:
             }
             ]
         }
-                  
+          
       Topics: 
       - !Ref SnsTopicCostAnomaly
 
@@ -131,6 +131,16 @@ Resources:
       Tags:
       - Key: Project
         Value: CostAnomalyToSlack
+  CostAnomalyToSlackLambdaVersion:
+    Type: AWS::Lambda::Version
+    Properties: 
+      FunctionName: !GetAtt CostAnomalyToSlackLambda.Arn
+  CostAnomalyToSlackLambdaAliasProd:
+    Type: AWS::Lambda::Alias
+    Properties: 
+      FunctionName: !GetAtt CostAnomalyToSlackLambda.Arn
+      FunctionVersion: !GetAtt CostAnomalyToSlackLambdaVersion.Version
+      Name: String
   CostAnomalyToSlackLambdaSnsPermission:
     Type: AWS::Lambda::Permission
     Properties:
