@@ -140,7 +140,7 @@ Resources:
     Properties: 
       FunctionName: !GetAtt CostAnomalyToSlackLambda.Arn
       FunctionVersion: !GetAtt CostAnomalyToSlackLambdaVersion.Version
-      Name: String
+      Name: prod
   CostAnomalyToSlackLambdaSnsPermission:
     Type: AWS::Lambda::Permission
     Properties:
