@@ -89,6 +89,8 @@ class Text:
 
 
 def lambda_handler(event, context):
+
+    print("testing a new lambda version")
     
     url = json.loads(get_secret())["anomaly-detection-slack-webhook-url"]
     
