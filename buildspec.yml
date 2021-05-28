@@ -1,5 +1,7 @@
 version: 0.2
 env:
+  variables:
+    - GHANIMIG_LAMBDA_CODE: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_NUMBER/lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
   exported-variables:
     - GHANIMIG_LAMBDA_CODE
 phases:
@@ -10,7 +12,6 @@ phases:
     commands:
       - echo "Entering build phase. Will zip the lambda files and create a package."
       - zip ./lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip lambda_function.py slack_sdk/ -r
-      - export GHANIMIG_LAMBDA_CODE = $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_NUMBER/lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
 artifacts:
   files:
     - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
