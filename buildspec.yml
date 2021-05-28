@@ -1,4 +1,11 @@
 version: 0.2
+env:
+  exported-variables:
+    - GHANIMIG_LAMBDA_CODE
+    - variable
+  secrets-manager:
+    key: secret-id:json-key:version-stage:version-id
+  git-credential-helper: no | yes
 phases:
   pre_build:
     commands:
@@ -7,6 +14,7 @@ phases:
     commands:
       - echo "Entering build phase. Will zip the lambda files and create a package."
       - zip ./lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip lambda_function.py slack_sdk/ -r
+      - export GHANIMIG_LAMBDA_CODE = lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
 artifacts:
   files:
     - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
