@@ -1,0 +1,31 @@
+{
+    "accountId": "123456789033",
+    "anomalyStartDate": "2020-12-13",
+    "anomalyEndDate": "2020-12-15",
+    "anomalyId": "newAnomaly",
+    "dimensionalValue": "AlertingIntegTestDimension",
+    "monitorArn": "arn:aws:ce::123456789012:anomalymonitor/522133ed-4937-4ea0-84cc-918a97d736ef",
+    "anomalyScore": {
+        "maxScore": 2.0,
+        "currentScore": 1.0
+    },
+    "impact": {
+        "maxImpact": 151.0,
+        "totalImpact": 1001.0
+    },
+    "rootCauses": [
+        {
+            "service": "AWS CloudTrail",
+            "region": "ap-southeast-2",
+            "linkedAccount": "123410611747",
+            "usageType": "APS2-PaidEventsRecorded"
+        },
+        {
+            "service": "Amazon Simple Storage Service",
+            "region": "us-east-1",
+            "linkedAccount": "432110611747",
+            "usageType": "Requests-Tier1"
+        }
+    ],
+    "anomalyDetailsLink": "https://console.aws.amazon.com/cost-management/home#/anomaly-detection/monitors/522133ed-4937-4ea0-84cc-918a97d736ef/anomalies/newAnomaly"
+}

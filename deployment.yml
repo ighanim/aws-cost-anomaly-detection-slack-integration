@@ -62,7 +62,6 @@ Resources:
         Value: CostAnomalyToSlack
     DependsOn:
     - CostAnomalyToSlackLambda
-
   SnsTopicPolicyCostAnomaly:
     Type: AWS::SNS::TopicPolicy
     Properties: 
