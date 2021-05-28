@@ -1,7 +1,7 @@
 version: 0.2
 env:
   variables:
-    - GHANIMIG_LAMBDA_CODE: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_NUMBER/lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
+    GHANIMIG_LAMBDA_CODE: $AWS_REGION-$(date +%Y-%m-%d)-$CODEBUILD_BUILD_NUMBER/lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
   exported-variables:
     - GHANIMIG_LAMBDA_CODE
 phases:
