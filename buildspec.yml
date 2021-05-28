@@ -2,10 +2,6 @@ version: 0.2
 env:
   exported-variables:
     - GHANIMIG_LAMBDA_CODE
-    - variable
-  secrets-manager:
-    key: secret-id:json-key:version-stage:version-id
-  git-credential-helper: no | yes
 phases:
   pre_build:
     commands:
