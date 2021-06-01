@@ -22,7 +22,7 @@ artifacts:
       base-directory: lambda-code
       files:
         - '**/*'
-    BuildArtifacts:
+    BuildArtifact:
       files:
         - deployment.yml
         - appspec.yml
