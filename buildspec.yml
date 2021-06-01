@@ -17,8 +17,8 @@ artifacts:
     - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
     - deployment.yml
     - appspec.yml
-    secondary-artifacts:
-      LambdaArtifacts:
-        base-directory: lambda-code
-        files:
-          - '**/*'
+  secondary-artifacts:
+    LambdaArtifacts:
+      base-directory: lambda-code
+      files:
+        - '**/*'
