@@ -159,9 +159,9 @@ Resources:
   SlackWebhookURLSecret:        
     Type: AWS::SecretsManager::Secret
     Properties: 
-      Name: anomaly-detection-slack-webhook-url
+      Name: anomaly-detection-slack-webhook-url2
       SecretString: !Sub
-      - '{"anomaly-detection-slack-webhook-url": "${secret}"}'
+      - '{"anomaly-detection-slack-webhook-url2": "${secret}"}'
       - { secret: !Ref slackWebhookURL }  
       Tags: 
       - Key: Project
