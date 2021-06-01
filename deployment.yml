@@ -78,7 +78,7 @@ Resources:
               "Resource": !Ref SnsTopicCostAnomaly ,
               "Condition": {
                 "StringEquals": {
-                  "AWS:SourceOwner": !Ref sourceAccount
+                  "AWS:SourceAccount": !Ref sourceAccount
                   }
                   }
             },
