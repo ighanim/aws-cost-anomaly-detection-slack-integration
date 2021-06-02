@@ -75,12 +75,7 @@ Resources:
               "Service": "costalerts.amazonaws.com" 
               },
               "Action": "sns:Publish",
-              "Resource": !Ref SnsTopicCostAnomaly ,
-              "Condition": {
-                "StringEquals": {
-                  "AWS:SourceAccount": !Ref sourceAccount
-                  }
-                  }
+              "Resource": !Ref SnsTopicCostAnomaly
             },
             {
               "Sid": "Lambda to subscribe",
