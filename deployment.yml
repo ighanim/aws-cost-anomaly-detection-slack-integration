@@ -54,7 +54,7 @@ Resources:
       Subscription:
       - Endpoint:
           Fn::GetAtt:
-          - CostAnomalyToSlackLambda
+          - CostAnomalyToSlackLambdaAliasProd
           - Arn
         Protocol: lambda
       Tags:
