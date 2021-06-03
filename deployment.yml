@@ -143,10 +143,7 @@ Resources:
       Principal: sns.amazonaws.com
       SourceArn:
         Ref: SnsTopicCostAnomaly
-      FunctionName:
-        Fn::GetAtt:
-        - CostAnomalyToSlackLambda
-        - Arn
+      FunctionName: !Ref CostAnomalyToSlackLambdaAliasProd
 
 #| Resource              | Type                        | Description                            |
 #|-----------------------|-----------------------------|----------------------------------------|
