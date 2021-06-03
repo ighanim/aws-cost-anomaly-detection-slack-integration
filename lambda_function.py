@@ -8,7 +8,7 @@ import os
 
 def get_secret():
 
-    secret_name = "anomaly-detection-slack-webhook-url"
+    secret_name = os.environ['SLACK_WEBHOOK_URL']
     region_name = region = os.environ['AWS_REGION']
 
     # Create a Secrets Manager client

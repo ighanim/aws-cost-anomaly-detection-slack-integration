@@ -8,7 +8,7 @@ import os
 
 def get_secret():
 
-    secret_name = "anomaly-detection-slack-webhook-url"
+    secret_name = os.environ['SLACK_WEBHOOK_URL']
     region_name = region = os.environ['AWS_REGION']
 
     # Create a Secrets Manager client
@@ -90,7 +90,7 @@ class Text:
 
 def lambda_handler(event, context):
 
-    print("testing a new lambda version - xyz")
+    print("testing a new lambda version -- xyz")
     
     url = json.loads(get_secret())["anomaly-detection-slack-webhook-url"]
     

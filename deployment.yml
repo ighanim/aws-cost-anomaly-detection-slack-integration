@@ -122,6 +122,9 @@ Resources:
         - CostAnomalyToSlackLambdaRole
         - Arn
       Runtime: python3.7
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookURLSecret
       Tags:
       - Key: Project
         Value: CostAnomalyToSlack
