@@ -88,7 +88,7 @@ Resources:
               "Resource": !Ref SnsTopicCostAnomaly,
               "Condition": {
                 "StringEquals": {
-                  "lambda:FunctionArn": !GetAtt CostAnomalyToSlackLambda.Arn
+                  "lambda:FunctionArn": !Ref CostAnomalyToSlackLambdaAliasProd
                 }
 
               }
