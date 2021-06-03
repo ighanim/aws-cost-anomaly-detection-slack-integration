@@ -12,7 +12,7 @@ phases:
       - echo "Entering build phase. Will zip the lambda files and create a package."
       - zip ./lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip lambda_function.py slack_sdk/ -r
       - export GHANIMIG_LAMBDA_CODE=lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
-      - sed 's/CostAnomalyToSlackLambdaVersion/CostAnomalyToSlackLambdaVersion$CODEBUILD_BUILD_NUMBER/' deployment.yml > deployment.yml
+      - sed "s/CostAnomalyToSlackLambdaVersion/CostAnomalyToSlackLambdaVersion$CODEBUILD_BUILD_NUMBER/" deployment.yml > deployment.yml
 artifacts:
   files:
     - lambda-code-v0.0.$CODEBUILD_BUILD_NUMBER.zip
