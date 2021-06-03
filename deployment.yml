@@ -52,10 +52,7 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       Subscription:
-      - Endpoint:
-          Fn::GetAtt:
-          - CostAnomalyToSlackLambdaAliasProd
-          - Arn
+      - Endpoint: !Ref CostAnomalyToSlackLambdaAliasProd
         Protocol: lambda
       Tags:
       - Key: Project
