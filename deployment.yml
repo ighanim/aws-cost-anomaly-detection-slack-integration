@@ -130,6 +130,7 @@ Resources:
         Value: CostAnomalyToSlack
   CostAnomalyToSlackLambdaVersion:
     Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
     Properties: 
       FunctionName: !GetAtt CostAnomalyToSlackLambda.Arn
   CostAnomalyToSlackLambdaAliasProd:
