@@ -179,4 +179,9 @@ Parameters:
   slackWebhookURL:
     Type: String
     Description: Slack Webhook URL.
+
+Outputs:
+  snsTopicArn:
+    Description: The Arn of the SNS topic created by the stack. This topic Arn is to be configured in the Anomaly Detection Subscription Configuratios.  
+    Value: !Ref SnsTopicCostAnomaly
   
