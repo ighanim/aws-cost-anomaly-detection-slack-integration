@@ -3,7 +3,7 @@ The project is a plug and play solution to detect cost anomalies in your AWS acc
 
 ### Solution overview
 
-![alt text](https://github.com/ighanim/aws-cost-anomaly-detection-slack-integration/blob/main/architecture-diagram.png)
+![alt text](https://github.com/ighanim/aws-cost-anomaly-detection-slack-integration/blob/main/images/architecture-diagram.png)
 
 
 ### Create a Slack Webhook URL
