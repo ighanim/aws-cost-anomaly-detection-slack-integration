@@ -1,7 +1,7 @@
 # AWS Cost Anomaly Detection Slack Integration
 The project is a plug and play solution to detect cost anomalies in your AWS accounts relying on the [AWS Cost Anomaly Detection](https://aws.amazon.com/aws-cost-management/aws-cost-anomaly-detection/) feature in Cost Explorer and push to a Slack channel. 
 
-### Solution overview
+### Solution Overview
 
 ![alt text](https://github.com/ighanim/aws-cost-anomaly-detection-slack-integration/blob/main/images/architecture-diagram.png)
 
