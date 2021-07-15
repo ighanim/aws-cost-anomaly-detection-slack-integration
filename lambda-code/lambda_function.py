@@ -105,7 +105,7 @@ def get_aws_account_name(account_id):
 
 def lambda_handler(event, context):
 
-    print("testing a new lambda version -- xyz")
+    print(json.dumps(event))
     
     url = json.loads(get_secret())["anomaly-detection-slack-webhook-url"]
     
