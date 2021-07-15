@@ -95,15 +95,13 @@ def get_aws_account_name(account_id):
     client = boto3.client('organizations')
 
     #Call describe_account in order to return the account_id corresponding to the account_number. 
-    response = client.describe_account(
-    AccountId=account_id
-    )
+    response = client.describe_account(AccountId=account_id)
     
-    accountName = response["Accounts"][0]["Name"]
+    accountName = response["Account"][0]["Name"]
     print("Fetching Account Name complete:" + accountName)
     
     #Return the Account Name corresponding the Input Account ID.
-    return response["Accounts"][0]["Name"]
+    return response["Account"][0]["Name"]
 
 def lambda_handler(event, context):
 
