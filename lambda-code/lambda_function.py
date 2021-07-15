@@ -4,6 +4,8 @@ import boto3
 import base64
 from botocore.exceptions import ClientError
 import os
+import urllib.request
+
 
 
 def get_secret():
@@ -103,17 +105,24 @@ def get_aws_account_name(account_id):
     #Return the Account Name corresponding the Input Account ID.
     return response["Account"]["Name"]
 
+def get_application_features():
+    url = f'http://localhost:2772/applications/cost-anomaly-to-slack-application/environments/cost-anomaly-to-slack-environment/configurations/cost-anomaly-to-slack-configuration-profile'
+    config = urllib.request.urlopen(url).read()
+    return config
+
 def lambda_handler(event, context):
 
     print(json.dumps(event))
     
-    url = json.loads(get_secret())["anomaly-detection-slack-webhook-url"]
+    print("Retrieve Slack URL from Secrets Manager")
+
+    slack_url = json.loads(get_secret())["anomaly-detection-slack-webhook-url"]
     
     print("Slack Webhook URL retrieved")
     
     print("Initialise Slack Webhook Client")
     
-    webhook = WebhookClient(url)
+    webhook = WebhookClient(slack_url)
     
     print("Decoding the SNS Message")
     anomalyEvent = json.loads(event["Records"][0]["Sns"]["Message"])
@@ -151,14 +160,20 @@ def lambda_handler(event, context):
     blocks.append(Block("section", text=anomalyDetailsLinkText.__dict__))
     blocks.append(Block("section", text=rootCausesHeaderText.__dict__))
     
+    #Load feature
+    feature_list = get_application_features()
+    feature_flag_displayAccountName = json.loads(feature_list)["feature-flags"]["displayAccountName"]
+    print(feature_flag_displayAccountName)
+    
     #Third, iterate through all possible root causes in the Anomaly Event and append the blocks as well as fields objects. 
     for rootCause in anomalyEvent["rootCauses"]:
     	fields = []
     	for rootCauseAttribute in rootCause:
-            if rootCauseAttribute == "linkedAccount":
-                accountName = get_aws_account_name(rootCause[rootCauseAttribute])
-                fields.append(Field("plain_text", "accountName"  + " : " + accountName, False))
-            fields.append(Field("plain_text", rootCauseAttribute  + " : " + rootCause[rootCauseAttribute], False))
+    	    if feature_flag_displayAccountName == True:
+    	        if rootCauseAttribute == "linkedAccount":
+    	            accountName = get_aws_account_name(rootCause[rootCauseAttribute])
+    	            fields.append(Field("plain_text", "accountName"  + " : " + accountName, False))
+    	    fields.append(Field("plain_text", rootCauseAttribute  + " : " + rootCause[rootCauseAttribute], False))
     	blocks.append(Block("section", fields = [ob.__dict__ for ob in fields]))
     	
     
