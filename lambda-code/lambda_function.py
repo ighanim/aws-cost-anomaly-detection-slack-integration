@@ -159,7 +159,7 @@ def lambda_handler(event, context):
             if rootCauseAttribute == "linkedAccount":
                 accountName = get_aws_account_name(rootCause[rootCauseAttribute])
                 fields.append(Field("plain_text", "accountName"  + " : " + accountName, False))
-    		fields.append(Field("plain_text", rootCauseAttribute  + " : " + rootCause[rootCauseAttribute], False))
+            fields.append(Field("plain_text", rootCauseAttribute  + " : " + rootCause[rootCauseAttribute], False))
     	blocks.append(Block("section", fields = [ob.__dict__ for ob in fields]))
     	
     
