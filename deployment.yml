@@ -215,10 +215,33 @@ Resources:
       Content: '{"feature-flags": {"displayAccountName": false}}'
       ContentType: 'application/json'
 
-      
+  CostAnomalyToSlackDeploymemtStrategy:    
+    Type: AWS::AppConfig::DeploymentStrategy
+    Properties: 
+      Name: cost-anomaly-to-slack-deployment-strategy
+      Description: Cost Anomaly to Slack Deployment Strategy
+      DeploymentDurationInMinutes: 1
+      FinalBakeTimeInMinutes: 1
+      GrowthFactor: 100
+      GrowthType: LINEAR
+      ReplicateTo: NONE
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack
   
-
-
+  CostAnomalyToSlackDeploymemt:      
+    Type: AWS::AppConfig::Deployment
+    Properties: 
+      ApplicationId: !Ref CostAnomlayToSlackApplication
+      ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
+      ConfigurationVersion: !Ref CostAnomalyToSlackConfigVersion
+      DeploymentStrategyId: !Ref CostAnomalyToSlackDeploymemtStrategy
+      Description: Cost Anomaly to Slack Deployment
+      EnvironmentId: !Ref CostAnomalyToSlackgEnvironment
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack
+    
 
 
 
