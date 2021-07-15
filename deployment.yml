@@ -212,7 +212,7 @@ Resources:
       ApplicationId: !Ref CostAnomlayToSlackApplication
       ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
       Description: 'A sample hosted configuration version'
-      Content: '{"feature-flags": {"displayAccountName": false}}'
+      Content: '{"feature-flags": {"displayAccountName": true}}'
       ContentType: 'application/json'
 
   CostAnomalyToSlackDeploymemtStrategy:    
