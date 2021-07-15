@@ -88,7 +88,7 @@ class Text:
 			self.emoji = kwargs.get("emoji")
 
 def get_aws_account_name(account_id):
-    #Function is used to fetch account name corresponding to an account number. The account name is used to display a meaningful name in the Slack notification. For this function to operate, proper IAM permission should be granted to the Lambda function role. During deployment, a parameter has to be set to true in order to allow deployment of the Lambda Permission and enble this function to be triggered. 
+    #Function is used to fetch account name corresponding to an account number. The account name is used to display a meaningful name in the Slack notification. For this function to operate, proper IAM permission should be granted to the Lambda function role.
     print("Fetching Account Name corresponding to accountId:" + account_id)
 
     #Initialise Organisations
@@ -97,11 +97,11 @@ def get_aws_account_name(account_id):
     #Call describe_account in order to return the account_id corresponding to the account_number. 
     response = client.describe_account(AccountId=account_id)
     
-    accountName = response["Account"][0]["Name"]
-    print("Fetching Account Name complete:" + accountName)
+    accountName = response["Account"]["Name"]
+    print("Fetching Account Name complete. Account Name:" + accountName)
     
     #Return the Account Name corresponding the Input Account ID.
-    return response["Account"][0]["Name"]
+    return response["Account"]["Name"]
 
 def lambda_handler(event, context):
 
@@ -110,6 +110,7 @@ def lambda_handler(event, context):
     url = json.loads(get_secret())["anomaly-detection-slack-webhook-url"]
     
     print("Slack Webhook URL retrieved")
+    
     print("Initialise Slack Webhook Client")
     
     webhook = WebhookClient(url)
