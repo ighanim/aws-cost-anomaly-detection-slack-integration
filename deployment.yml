@@ -202,7 +202,6 @@ Resources:
       Name: cost-anomaly-to-slack-configuration-profile
       Description: Cost Anomaly to Slack AppConfig Application Environment
       LocationUri: hosted
-      Name: String
       Tags: 
       - Key: Project
         Value: CostAnomalyToSlack
@@ -213,7 +212,7 @@ Resources:
       ApplicationId: !Ref CostAnomlayToSlackApplication
       ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
       Description: 'A sample hosted configuration version'
-      Content: '"{\n    \"feature-flags\": {\n        \"displayAccountName\": false\n    }\n}"'
+      Content: '{"feature-flags": {"displayAccountName": false}}'
       ContentType: 'application/json'
 
       
