@@ -180,6 +180,7 @@ Resources:
     Type: AWS::AppConfig::Application
     Properties: 
       Description: Cost Anomaly to Slack AppConfig Application
+      Name: cost-anomaly-to-slack-application
       Tags: 
       - Key: Project
         Value: CostAnomalyToSlack
@@ -188,6 +189,7 @@ Resources:
     Type: AWS::AppConfig::Environment
     Properties: 
       ApplicationId: !Ref CostAnomlayToSlackApplication
+      Name: cost-anomaly-to-slack-environment
       Description: Cost Anomaly to Slack AppConfig Application Environment
       Tags: 
       - Key: Project
@@ -197,6 +199,7 @@ Resources:
     Type: AWS::AppConfig::ConfigurationProfile
     Properties: 
       ApplicationId: !Ref CostAnomlayToSlackApplication
+      Name: cost-anomaly-to-slack-configuration-profile
       Description: Cost Anomaly to Slack AppConfig Application Environment
       LocationUri: hosted
       Name: String
@@ -210,6 +213,7 @@ Resources:
       ApplicationId: !Ref CostAnomlayToSlackApplication
       ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
       Description: 'A sample hosted configuration version'
+      Name: cost-anomaly-to-slack-configuration-version
       Content: '"{\n    \"feature-flags\": {\n        \"displayAccountName\": false\n    }\n}"'
       ContentType: 'application/json'
 
