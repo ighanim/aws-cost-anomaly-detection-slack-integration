@@ -27,6 +27,7 @@ Resources:
 
   DescribeAccountNameLambdaPolicy:
     Type: AWS::IAM::ManagedPolicy
+    Condition: displayAccountNameEnabled
     Properties:
       PolicyDocument:
         Version: '2012-10-17'
@@ -193,6 +194,18 @@ Parameters:
   slackWebhookURL:
     Type: String
     Description: Slack Webhook URL.
+  displayAccountName:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+    Description: Select whether to display Account Name in the Slack Notification or not. This will require special permissions for the Lambda function to access the Organisations API.
+
+Conditions:
+  displayAccountNameEnabled: !Equals 
+    - !Ref displayAccountName
+    - true
 
 Outputs:
   snsTopicArn:
