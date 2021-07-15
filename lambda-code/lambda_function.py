@@ -87,6 +87,23 @@ class Text:
 		if kwargs.get("emoji"):
 			self.emoji = kwargs.get("emoji")
 
+def get_aws_account_name(account_id):
+    #Function is used to fetch account name corresponding to an account number. The account name is used to display a meaningful name in the Slack notification. For this function to operate, proper IAM permission should be granted to the Lambda function role. During deployment, a parameter has to be set to true in order to allow deployment of the Lambda Permission and enble this function to be triggered. 
+    print("Fetching Account Name corresponding to accountId:" + account_id)
+
+    #Initialise Organisations
+    client = boto3.client('organizations')
+
+    #Call describe_account in order to return the account_id corresponding to the account_number. 
+    response = client.describe_account(
+    AccountId=account_id
+    )
+    
+    accountName = response["Accounts"][0]["Name"]
+    print("Fetching Account Name complete:" + accountName)
+    
+    #Return the Account Name corresponding the Input Account ID.
+    return response["Accounts"][0]["Name"]
 
 def lambda_handler(event, context):
 
@@ -139,14 +156,14 @@ def lambda_handler(event, context):
     for rootCause in anomalyEvent["rootCauses"]:
     	fields = []
     	for rootCauseAttribute in rootCause:
+            if rootCauseAttribute == "linkedAccount":
+                accountName = get_aws_account_name(rootCause[rootCauseAttribute])
+                fields.append(Field("plain_text", "accountName"  + " : " 
+    		    + accountName, False))
     		fields.append(Field("plain_text", rootCauseAttribute  + " : " 
     		+ rootCause[rootCauseAttribute], False))
     	blocks.append(Block("section", fields = [ob.__dict__ for ob in fields]))
     	
-    #print(json.dumps([ob.__dict__ for ob in blocks]))
-
-    
-    #print("The Block Format:" +json.dumps([ob.__dict__ for ob in blocks]))
     
     #Finally, send the message to the Slack Webhook. 
     response = webhook.send(

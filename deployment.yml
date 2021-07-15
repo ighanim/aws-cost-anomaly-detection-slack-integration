@@ -2,10 +2,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
 
-#| Resource                     | Type                    | Description                                      |
-#|------------------------------|-------------------------|--------------------------------------------------|
-#| GetSecretValueLambdaPolicy   | AWS::IAM::ManagedPolicy | IAM policy with GetSecretValue value permissions |
-#| CostAnomalyToSlackLambdaRole | AWS::IAM::Role          | IAM Role associated with the Lambda Functions    |
+#| Resource                          | Type                    | Description                                      |
+#|------------------------------     |-------------------------|--------------------------------------------------|
+#| GetSecretValueLambdaPolicy        | AWS::IAM::ManagedPolicy | IAM policy with GetSecretValue value permissions |
+#| CostAnomalyToSlackLambdaRole      | AWS::IAM::Role          | IAM Role associated with the Lambda Functions    |
+#| DescribeAccountNameLambdaPolicy   | AWS::IAM::ManagedPolicy | IAM policy to DescribeAccount Name               |
 
  
   GetSecretValueLambdaPolicy:
@@ -24,6 +25,19 @@ Resources:
       Roles:
       - Ref: CostAnomalyToSlackLambdaRole
 
+  DescribeAccountNameLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - organizations:DescribeAccount
+          Resource: "arn:aws:organizations::*:account/o-*/*"
+      Roles:
+      - Ref: CostAnomalyToSlackLambdaRole
+      
   CostAnomalyToSlackLambdaRole:
     Type: AWS::IAM::Role
     Properties:
