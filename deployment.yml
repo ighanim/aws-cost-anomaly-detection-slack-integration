@@ -175,7 +175,6 @@ Resources:
       - Key: Project
         Value: CostAnomalyToSlack
 
-
   CostAnomlayToSlackApplication:
     Type: AWS::AppConfig::Application
     Properties: 
@@ -212,7 +211,9 @@ Resources:
       ApplicationId: !Ref CostAnomlayToSlackApplication
       ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
       Description: 'A sample hosted configuration version'
-      Content: '{"feature-flags": {"displayAccountName": true}}'
+      Content: !Sub 
+      - '{"feature-flags": {"displayAccountName": ${displayAccountNameValueBoolean}}'
+      - displayAccountNameValueBoolean: !Ref displayAccountName
       ContentType: 'application/json'
 
   CostAnomalyToSlackDeploymemtStrategy:    
@@ -242,9 +243,6 @@ Resources:
       - Key: Project
         Value: CostAnomalyToSlack
     
-
-
-
 #| Parameter       | Type   | Description                                                                                               |
 #|-----------------|--------|-----------------------------------------------------------------------------------------------------------|
 #| s3Bucket        | String | S3 bucket where the Lambda code package is stored                                                         |
