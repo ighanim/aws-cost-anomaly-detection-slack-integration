@@ -3,7 +3,7 @@ The project is a plug and play solution to detect cost anomalies in your AWS acc
 
 ### Solution Overview
 
-![alt text](https://github.com/ighanim/aws-cost-anomaly-detection-slack-integration/blob/main/images/architecture-diagram-v1.1.png)
+![alt text](https://github.com/ighanim/aws-cost-anomaly-detection-slack-integration/blob/main/images/architecture-diagram-v1.1git.png)
 
 
 ### Create a Slack Webhook URL
@@ -41,6 +41,7 @@ Parameter | Description
 `s3Bucket` | The name of the S3 bucket where project artifacts (Lambda package and `deployment.yml` are stored. The bucket has to be in the same region as the CloudFormation deployment
 `codePackage` | The name of the Lambda code package (i.e.`lambda-package-v1.0.0.zip`)
 `slackWebhookURL` | The Slack webhook URL
+`displayAccountName` | Select whether to display Account Name in the Slack Notification or not. This will require special permissions for the Lambda function to access the Organisations API.
 
 ## Configure Cost Anomaly Detection
 
