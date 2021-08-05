@@ -7,7 +7,7 @@ Resources:
 #| GetSecretValueLambdaPolicy        | AWS::IAM::ManagedPolicy | IAM policy with GetSecretValue value permissions |
 #| CostAnomalyToSlackLambdaRole      | AWS::IAM::Role          | IAM Role associated with the Lambda Functions    |
 #| DescribeAccountNameLambdaPolicy   | AWS::IAM::ManagedPolicy | IAM policy to DescribeAccount Name               |
-
+#| ReadAppConfigLambdaPolicy         | AWS::IAM::ManagedPolicy | A Policy to read AppConfig configurations        |
  
   GetSecretValueLambdaPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -24,7 +24,6 @@ Resources:
              'secretsmanager:SecretId': !Ref SlackWebhookURLSecret
       Roles:
       - Ref: CostAnomalyToSlackLambdaRole
-
   ReadAppConfigLambdaPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -37,7 +36,6 @@ Resources:
           Resource: "*"
       Roles:
       - Ref: CostAnomalyToSlackLambdaRole  
-
   DescribeAccountNameLambdaPolicy:
     Type: AWS::IAM::ManagedPolicy
     Condition: displayAccountNameEnabled
@@ -50,8 +48,7 @@ Resources:
           - organizations:DescribeAccount
           Resource: "arn:aws:organizations::*:account/o-*/*"
       Roles:
-      - Ref: CostAnomalyToSlackLambdaRole
-      
+      - Ref: CostAnomalyToSlackLambdaRole     
   CostAnomalyToSlackLambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -72,9 +69,10 @@ Resources:
         Value: CostAnomalyToSlack
 
 
-#| Resource            | Type            | Description                                                                     |
-#|---------------------|-----------------|---------------------------------------------------------------------------------|
-#| SnsTopicCostAnomaly | AWS::SNS::Topic | SNS Topic that shall receive notifications from Cost Explorer Anomaly Detection |
+#| Resource                  | Type                  | Description                                                                     |
+#|---------------------------|-----------------------|---------------------------------------------------------------------------------|
+#| SnsTopicCostAnomaly       | AWS::SNS::Topic       | SNS Topic that shall receive notifications from Cost Explorer Anomaly Detection |
+#| SnsTopicPolicyCostAnomaly | AWS::SNS::TopicPolicy | SNS Topic Access Policy                                                         |
 
   SnsTopicCostAnomaly:
     Type: AWS::SNS::Topic
@@ -127,11 +125,12 @@ Resources:
       Topics: 
       - !Ref SnsTopicCostAnomaly
 
-
 #| Resource                              | Type                    | Description                                            |
 #|---------------------------------------|-------------------------|--------------------------------------------------------|
 #| CostAnomalyToSlackLambda              | AWS::Lambda::Function   | Main Lambda Function that will call Slack Webhooks API |
 #| CostAnomalyToSlackLambdaSnsPermission | AWS::Lambda::Permission | Permission for SNS to invoke CostAnomalyToSlackLambda  |
+#| CostAnomalyToSlackLambdaVersion       | AWS::Lambda::Version    | A new Lambda Version. For a new version to be deployed, the logical resource name must be changed. |
+#| CostAnomalyToSlackLambdaAliasProd     | AWS::Lambda::Alias      | An alias to route traffic to route to one of the Lambda versions.                                  |
 
   CostAnomalyToSlackLambda:
     Type: AWS::Lambda::Function
@@ -189,7 +188,6 @@ Resources:
       Tags: 
       - Key: Project
         Value: CostAnomalyToSlack
-
   CostAnomlayToSlackApplication:
     Type: AWS::AppConfig::Application
     Properties: 
@@ -198,7 +196,6 @@ Resources:
       Tags: 
       - Key: Project
         Value: CostAnomalyToSlack
-
   CostAnomalyToSlackgEnvironment:
     Type: AWS::AppConfig::Environment
     Properties: 
@@ -208,7 +205,6 @@ Resources:
       Tags: 
       - Key: Project
         Value: CostAnomalyToSlack
-
   CostAnomalyToSlackConfigProfile:
     Type: AWS::AppConfig::ConfigurationProfile
     Properties: 
@@ -218,8 +214,7 @@ Resources:
       LocationUri: hosted
       Tags: 
       - Key: Project
-        Value: CostAnomalyToSlack
-       
+        Value: CostAnomalyToSlack       
   CostAnomalyToSlackConfigVersion:
     Type: AWS::AppConfig::HostedConfigurationVersion
     Properties:
@@ -230,7 +225,6 @@ Resources:
       - '{"feature-flags": {"displayAccountName": ${displayAccountNameValueBoolean}}}'
       - displayAccountNameValueBoolean: !Ref displayAccountName
       ContentType: 'application/json'
-
   CostAnomalyToSlackDeploymemtStrategy:    
     Type: AWS::AppConfig::DeploymentStrategy
     Properties: 
@@ -243,8 +237,7 @@ Resources:
       ReplicateTo: NONE
       Tags: 
       - Key: Project
-        Value: CostAnomalyToSlack
-  
+        Value: CostAnomalyToSlack 
   CostAnomalyToSlackDeploymemt:      
     Type: AWS::AppConfig::Deployment
     Properties: 
@@ -265,9 +258,9 @@ Resources:
 #| slackWebhookURL | String | Slack channel webhook URL. If you don't have one already, check https://api.slack.com/messaging/webhooks. |
 
 Parameters:
-  sourceAccount:
-    Type: String
-    Description: Enter the 11-digit AWS Account Number of the cost anomaly notification subscription. If you would like to aggregate data across all of your accounts, enter the Payer/Management account number. Else, if you would like to receive notifications of a specific member account (be it this account), enter the account number. 
+#  sourceAccount:
+#    Type: String
+#    Description: Enter the 11-digit AWS Account Number of the cost anomaly notification subscription. If you would like to aggregate data across all of your accounts, enter the Payer/Management account number. Else, if you would like to receive notifications of a specific member account (be it this account), enter the account number. 
   s3Bucket:
     Type: String
     Description: S3 Bucket where your Lambda functions and StepFunctions state machines    are stored.
@@ -295,7 +288,6 @@ Outputs:
     Description: The Arn of the SNS topic created by the stack. This topic Arn is to be configured in the Anomaly Detection Subscription Configuratios.  
     Value: !Ref SnsTopicCostAnomaly
 
-
 Mappings: 
   AppConfigLayerArn: 
     us-east-1:
@@ -307,4 +299,48 @@ Mappings:
     us-west-2: 
       AppConfigLayerArn: arn:aws:lambda:us-west-2:359756378197:layer:AWS-AppConfig-Extension:62
     ap-southeast-2: 
-      AppConfigLayerArn: arn:aws:lambda:ap-southeast-2:080788657173:layer:AWS-AppConfig-Extension:49  
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-2:080788657173:layer:AWS-AppConfig-Extension:49
+    ca-central-1: 
+      AppConfigLayerArn: arn:aws:lambda:ca-central-1:039592058896:layer:AWS-AppConfig-Extension:42
+    eu-central-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-central-1:066940009817:layer:AWS-AppConfig-Extension:49
+    eu-west-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-1:434848589818:layer:AWS-AppConfig-Extension:41
+    eu-west-2: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-2:282860088358:layer:AWS-AppConfig-Extension:42
+    eu-west-3: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-3:493207061005:layer:AWS-AppConfig-Extension:43
+    eu-north-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-north-1:646970417810:layer:AWS-AppConfig-Extension:61
+    eu-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-south-1:203683718741:layer:AWS-AppConfig-Extension:39
+    cn-north-1: 
+      AppConfigLayerArn: arn:aws-cn:lambda:cn-north-1:615057806174:layer:AWS-AppConfig-Extension:38
+    cn-northwest-1: 
+      AppConfigLayerArn: arn:aws-cn:lambda:cn-northwest-1:615084187847:layer:AWS-AppConfig-Extension:38
+    ap-east-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-east-1:630222743974:layer:AWS-AppConfig-Extension:39
+    ap-northeast-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-1:980059726660:layer:AWS-AppConfig-Extension:38
+    ap-northeast-3: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-3:706869817123:layer:AWS-AppConfig-Extension:24
+    ap-northeast-2: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-2:826293736237:layer:AWS-AppConfig-Extension:49
+    ap-southeast-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-1:421114256042:layer:AWS-AppConfig-Extension:38
+    ap-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-south-1:554480029851:layer:AWS-AppConfig-Extension:50
+    sa-east-1: 
+      AppConfigLayerArn: arn:aws:lambda:sa-east-1:000010852771:layer:AWS-AppConfig-Extension:44
+    af-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:af-south-1:574348263942:layer:AWS-AppConfig-Extension:39
+    me-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:me-south-1:559955524753:layer:AWS-AppConfig-Extension:39
+    us-gov-east-1:
+      AppConfigLayerArn: arn:aws-us-gov:lambda:us-gov-east-1:946561847325:layer:AWS-AppConfig-Extension:15
+    us-gov-west-1:
+      AppConfigLayerArn: arn:aws-us-gov:lambda:us-gov-west-1:946746059096:layer:AWS-AppConfig-Extension:15
+    
+
+    
+     
