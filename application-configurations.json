@@ -1,5 +1,20 @@
 {
     "feature-flags": {
         "displayAccountName": false
-    }
+    },
+    "routing-configurations": [
+        {
+            "default": true,
+            "target-channels": [
+                {
+                    "type": "Slack",
+                    "URL": "https://islamghanimhotmailcom.webhook.office.com/webhookb2/45c91c77-f8fe-4052-9104-81008638e14b@cf1c6215-b69d-4c61-88a0-0766fbf0fe78/IncomingWebhook/ce8e9732b8ca435495f35bc41d75a7c8/42dccf92-8b4a-4c33-8ae6-2f4993eda6ed"
+                },
+                {
+                    "type": "MS_Teams",
+                    "URL": "https://hooks.slack.com/services/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"
+                }
+            ]
+        }
+    ]
 }
