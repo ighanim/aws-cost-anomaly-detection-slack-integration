@@ -1,0 +1,110 @@
+# Critical Fixes Patch for AWS Cost Anomaly Detection Slack Integration
+# Apply these minimal changes to make the 2021 code work in 2025
+
+## File: deployment.yml
+
+### Fix 1: Update Lambda Runtime (Line ~132)
+- Runtime: python3.7
++ Runtime: python3.12
+
+### Fix 2: Update IAM Permissions for AppConfig (Lines ~50-56)
+Replace the ReadAppConfigLambdaPolicy Statement with:
+```yaml
+        Statement:
+        - Effect: Allow
+          Action:
+          - appconfig:StartConfigurationSession
+          - appconfig:GetLatestConfiguration
+          Resource: "*"
+```
+
+### Fix 3: Update AppConfig Layer ARNs (Lines ~280-340)
+Replace the entire AppConfigLayerArn mapping with:
+
+```yaml
+Mappings: 
+  AppConfigLayerArn: 
+    us-east-1:
+      AppConfigLayerArn: arn:aws:lambda:us-east-1:027255383542:layer:AWS-AppConfig-Extension:207
+    us-east-2: 
+      AppConfigLayerArn: arn:aws:lambda:us-east-2:728743619870:layer:AWS-AppConfig-Extension:162
+    us-west-1: 
+      AppConfigLayerArn: arn:aws:lambda:us-west-1:958113053741:layer:AWS-AppConfig-Extension:258
+    us-west-2: 
+      AppConfigLayerArn: arn:aws:lambda:us-west-2:359756378197:layer:AWS-AppConfig-Extension:262
+    ap-southeast-2: 
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-2:080788657173:layer:AWS-AppConfig-Extension:199
+    ca-central-1: 
+      AppConfigLayerArn: arn:aws:lambda:ca-central-1:039592058896:layer:AWS-AppConfig-Extension:152
+    eu-central-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-central-1:066940009817:layer:AWS-AppConfig-Extension:189
+    eu-west-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-1:434848589818:layer:AWS-AppConfig-Extension:189
+    eu-west-2: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-2:282860088358:layer:AWS-AppConfig-Extension:133
+    eu-west-3: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-3:493207061005:layer:AWS-AppConfig-Extension:162
+    eu-north-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-north-1:646970417810:layer:AWS-AppConfig-Extension:259
+    eu-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-south-1:203683718741:layer:AWS-AppConfig-Extension:140
+    cn-north-1: 
+      AppConfigLayerArn: arn:aws-cn:lambda:cn-north-1:615057806174:layer:AWS-AppConfig-Extension:133
+    cn-northwest-1: 
+      AppConfigLayerArn: arn:aws-cn:lambda:cn-northwest-1:615084187847:layer:AWS-AppConfig-Extension:131
+    ap-east-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-east-1:630222743974:layer:AWS-AppConfig-Extension:142
+    ap-northeast-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-1:980059726660:layer:AWS-AppConfig-Extension:155
+    ap-northeast-3: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-3:706869817123:layer:AWS-AppConfig-Extension:159
+    ap-northeast-2: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-2:826293736237:layer:AWS-AppConfig-Extension:165
+    ap-southeast-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-1:421114256042:layer:AWS-AppConfig-Extension:156
+    ap-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-south-1:554480029851:layer:AWS-AppConfig-Extension:175
+    sa-east-1: 
+      AppConfigLayerArn: arn:aws:lambda:sa-east-1:000010852771:layer:AWS-AppConfig-Extension:215
+    af-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:af-south-1:574348263942:layer:AWS-AppConfig-Extension:152
+    me-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:me-south-1:559955524753:layer:AWS-AppConfig-Extension:154
+    us-gov-east-1:
+      AppConfigLayerArn: arn:aws-us-gov:lambda:us-gov-east-1:946561847325:layer:AWS-AppConfig-Extension:110
+    us-gov-west-1:
+      AppConfigLayerArn: arn:aws-us-gov:lambda:us-gov-west-1:946746059096:layer:AWS-AppConfig-Extension:110
+```
+
+## File: lambda-code/lambda_function.py
+
+### Optional but Recommended: Add error handling around AppConfig call (Line ~108)
+Replace:
+```python
+def get_application_features():
+    url = f'http://localhost:2772/applications/cost-anomaly-to-slack-application/environments/cost-anomaly-to-slack-environment/configurations/cost-anomaly-to-slack-configuration-profile'
+    config = urllib.request.urlopen(url).read()
+    return config
+```
+
+With:
+```python
+def get_application_features():
+    url = f'http://localhost:2772/applications/cost-anomaly-to-slack-application/environments/cost-anomaly-to-slack-environment/configurations/cost-anomaly-to-slack-configuration-profile'
+    try:
+        config = urllib.request.urlopen(url, timeout=10).read()
+        return config
+    except Exception as e:
+        print(f"Error retrieving AppConfig: {e}")
+        # Return default configuration if AppConfig fails
+        return b'{"feature-flags": {"displayAccountName": false}}'
+```
+
+## Summary
+These are the MINIMUM changes needed to make the 2021 code work in 2025:
+1. Update Python runtime to 3.12
+2. Fix AppConfig IAM permissions 
+3. Update AppConfig layer ARNs to current versions
+4. (Optional) Add basic error handling to prevent failures
+
+The complete updated files (deployment-updated.yml and lambda_function_updated.py) provide additional improvements but these patches will restore basic functionality.

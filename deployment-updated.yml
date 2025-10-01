@@ -1,0 +1,364 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'AWS Cost Anomaly Detection Slack Integration - Updated for 2025'
+
+Resources:
+
+#| Resource                          | Type                    | Description                                      |
+#|------------------------------     |-------------------------|--------------------------------------------------|
+#| GetSecretValueLambdaPolicy        | AWS::IAM::ManagedPolicy | IAM policy with GetSecretValue value permissions |
+#| CostAnomalyToSlackLambdaRole      | AWS::IAM::Role          | IAM Role associated with the Lambda Functions    |
+#| DescribeAccountNameLambdaPolicy   | AWS::IAM::ManagedPolicy | IAM policy to DescribeAccount Name               |
+#| ReadAppConfigLambdaPolicy         | AWS::IAM::ManagedPolicy | A Policy to read AppConfig configurations        |
+ 
+  GetSecretValueLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: "*"
+          Condition:
+            StringEquals:
+             'secretsmanager:SecretId': !Ref SlackWebhookURLSecret
+      Roles:
+      - Ref: CostAnomalyToSlackLambdaRole
+
+  ReadAppConfigLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - appconfig:StartConfigurationSession
+          - appconfig:GetLatestConfiguration
+          Resource: "*"
+      Roles:
+      - Ref: CostAnomalyToSlackLambdaRole  
+
+  DescribeAccountNameLambdaPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Condition: displayAccountNameEnabled
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - organizations:DescribeAccount
+          Resource: "arn:aws:organizations::*:account/o-*/*"
+      Roles:
+      - Ref: CostAnomalyToSlackLambdaRole     
+
+  CostAnomalyToSlackLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: "/"
+      Tags:
+      - Key: Project
+        Value: CostAnomalyToSlack
+
+#| Resource                  | Type                  | Description                                                                     |
+#|---------------------------|-----------------------|---------------------------------------------------------------------------------|
+#| SnsTopicCostAnomaly       | AWS::SNS::Topic       | SNS Topic that shall receive notifications from Cost Explorer Anomaly Detection |
+#| SnsTopicPolicyCostAnomaly | AWS::SNS::TopicPolicy | SNS Topic Access Policy                                                         |
+
+  SnsTopicCostAnomaly:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Endpoint: !Ref CostAnomalyToSlackLambdaAliasProd
+        Protocol: lambda
+      Tags:
+      - Key: Project
+        Value: CostAnomalyToSlack
+    DependsOn:
+    - CostAnomalyToSlackLambda
+
+  SnsTopicPolicyCostAnomaly:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      PolicyDocument: 
+        {
+          "Statement": [
+            {
+            "Sid": "costalerts to publish",
+            "Effect": "Allow",
+            "Principal": { 
+              "Service": "costalerts.amazonaws.com" 
+              },
+              "Action": "sns:Publish",
+              "Resource": !Ref SnsTopicCostAnomaly
+            },
+            {
+              "Sid": "Lambda to subscribe",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": [
+                "sns:Subscribe",
+                "sns:Receive"
+                ],
+              "Resource": !Ref SnsTopicCostAnomaly,
+              "Condition": {
+                "StringEquals": {
+                  "lambda:FunctionArn": !Ref CostAnomalyToSlackLambdaAliasProd
+                }
+              }
+            }
+            ]
+        }
+      Topics: 
+      - !Ref SnsTopicCostAnomaly
+
+#| Resource                              | Type                    | Description                                            |
+#|---------------------------------------|-------------------------|--------------------------------------------------------|
+#| CostAnomalyToSlackLambda              | AWS::Lambda::Function   | Main Lambda Function that will call Slack Webhooks API |
+#| CostAnomalyToSlackLambdaSnsPermission | AWS::Lambda::Permission | Permission for SNS to invoke CostAnomalyToSlackLambda  |
+#| CostAnomalyToSlackLambdaVersion       | AWS::Lambda::Version    | A new Lambda Version. For a new version to be deployed, the logical resource name must be changed. |
+#| CostAnomalyToSlackLambdaAliasProd     | AWS::Lambda::Alias      | An alias to route traffic to route to one of the Lambda versions.                                  |
+
+  CostAnomalyToSlackLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket:
+          Ref: s3Bucket
+        S3Key: !Ref codePackage
+      Description: Lambda Function to Send Cost Anomaly Events to Slack Webhook
+      Handler: lambda_function.lambda_handler
+      Role:
+        Fn::GetAtt:
+        - CostAnomalyToSlackLambdaRole
+        - Arn
+      Runtime: python3.12
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookURLSecret
+      Layers: 
+      - !FindInMap [AppConfigLayerArn, !Ref "AWS::Region", AppConfigLayerArn]
+      Tags:
+      - Key: Project
+        Value: CostAnomalyToSlack
+
+  CostAnomalyToSlackLambdaVersion:
+    Type: AWS::Lambda::Version
+    DeletionPolicy: Retain
+    Properties: 
+      FunctionName: !GetAtt CostAnomalyToSlackLambda.Arn
+
+  CostAnomalyToSlackLambdaAliasProd:
+    Type: AWS::Lambda::Alias
+    Properties: 
+      FunctionName: !GetAtt CostAnomalyToSlackLambda.Arn
+      FunctionVersion: !GetAtt CostAnomalyToSlackLambdaVersion.Version
+      Name: prod
+
+  CostAnomalyToSlackLambdaSnsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn:
+        Ref: SnsTopicCostAnomaly
+      FunctionName: !Ref CostAnomalyToSlackLambdaAliasProd
+
+#| Resource              | Type                        | Description                            |
+#|-----------------------|-----------------------------|----------------------------------------|
+#| SlackWebhookURLSecret | AWS::SecretsManager::Secret | Secret storing the Slack webhook URL.  |
+  
+  SlackWebhookURLSecret:        
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Name: !Join [ "-", [ !Ref AWS::StackName, anomaly-detection-slack-webhook-url ] ] 
+      SecretString: !Sub
+      - '{"anomaly-detection-slack-webhook-url": "${secret}"}'
+      - { secret: !Ref slackWebhookURL }  
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack
+
+  CostAnomlayToSlackApplication:
+    Type: AWS::AppConfig::Application
+    Properties: 
+      Description: Cost Anomaly to Slack AppConfig Application
+      Name: cost-anomaly-to-slack-application
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack
+
+  CostAnomalyToSlackgEnvironment:
+    Type: AWS::AppConfig::Environment
+    Properties: 
+      ApplicationId: !Ref CostAnomlayToSlackApplication
+      Name: cost-anomaly-to-slack-environment
+      Description: Cost Anomaly to Slack AppConfig Application Environment
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack
+
+  CostAnomalyToSlackConfigProfile:
+    Type: AWS::AppConfig::ConfigurationProfile
+    Properties: 
+      ApplicationId: !Ref CostAnomlayToSlackApplication
+      Name: cost-anomaly-to-slack-configuration-profile
+      Description: Cost Anomaly to Slack AppConfig Application Environment
+      LocationUri: hosted
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack       
+
+  CostAnomalyToSlackConfigVersion:
+    Type: AWS::AppConfig::HostedConfigurationVersion
+    Properties:
+      ApplicationId: !Ref CostAnomlayToSlackApplication
+      ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
+      Description: 'A sample hosted configuration version'
+      Content: !Sub 
+      - '{"feature-flags": {"displayAccountName": ${displayAccountNameValueBoolean}}}'
+      - displayAccountNameValueBoolean: !Ref displayAccountName
+      ContentType: 'application/json'
+
+  CostAnomalyToSlackDeploymemtStrategy:    
+    Type: AWS::AppConfig::DeploymentStrategy
+    Properties: 
+      Name: cost-anomaly-to-slack-deployment-strategy
+      Description: Cost Anomaly to Slack Deployment Strategy
+      DeploymentDurationInMinutes: 1
+      FinalBakeTimeInMinutes: 1
+      GrowthFactor: 100
+      GrowthType: LINEAR
+      ReplicateTo: NONE
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack 
+
+  CostAnomalyToSlackDeploymemt:      
+    Type: AWS::AppConfig::Deployment
+    Properties: 
+      ApplicationId: !Ref CostAnomlayToSlackApplication
+      ConfigurationProfileId: !Ref CostAnomalyToSlackConfigProfile
+      ConfigurationVersion: !Ref CostAnomalyToSlackConfigVersion
+      DeploymentStrategyId: !Ref CostAnomalyToSlackDeploymemtStrategy
+      Description: Cost Anomaly to Slack Deployment
+      EnvironmentId: !Ref CostAnomalyToSlackgEnvironment
+      Tags: 
+      - Key: Project
+        Value: CostAnomalyToSlack
+    
+Parameters:
+  s3Bucket:
+    Type: String
+    Description: S3 Bucket where your Lambda functions and StepFunctions state machines are stored.
+  codePackage:
+    Type: String
+    Description: S3 key for the Lambda Code. 
+  slackWebhookURL:
+    Type: String
+    Description: Slack Webhook URL.
+  displayAccountName:
+    Type: String
+    Default: true
+    AllowedValues:
+      - true
+      - false
+    Description: Select whether to display Account Name in the Slack Notification or not. This will require special permissions for the Lambda function to access the Organisations API.
+
+Conditions:
+  displayAccountNameEnabled: !Equals 
+    - !Ref displayAccountName
+    - true
+
+Outputs:
+  snsTopicArn:
+    Description: The Arn of the SNS topic created by the stack. This topic Arn is to be configured in the Anomaly Detection Subscription Configurations.  
+    Value: !Ref SnsTopicCostAnomaly
+
+# Updated AppConfig Layer ARNs for 2025 - Version 2.0.2037 (Latest as of May 2025)
+Mappings: 
+  AppConfigLayerArn: 
+    us-east-1:
+      AppConfigLayerArn: arn:aws:lambda:us-east-1:027255383542:layer:AWS-AppConfig-Extension:207
+    us-east-2: 
+      AppConfigLayerArn: arn:aws:lambda:us-east-2:728743619870:layer:AWS-AppConfig-Extension:162
+    us-west-1: 
+      AppConfigLayerArn: arn:aws:lambda:us-west-1:958113053741:layer:AWS-AppConfig-Extension:258
+    us-west-2: 
+      AppConfigLayerArn: arn:aws:lambda:us-west-2:359756378197:layer:AWS-AppConfig-Extension:262
+    ap-southeast-2: 
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-2:080788657173:layer:AWS-AppConfig-Extension:199
+    ca-central-1: 
+      AppConfigLayerArn: arn:aws:lambda:ca-central-1:039592058896:layer:AWS-AppConfig-Extension:152
+    eu-central-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-central-1:066940009817:layer:AWS-AppConfig-Extension:189
+    eu-west-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-1:434848589818:layer:AWS-AppConfig-Extension:189
+    eu-west-2: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-2:282860088358:layer:AWS-AppConfig-Extension:133
+    eu-west-3: 
+      AppConfigLayerArn: arn:aws:lambda:eu-west-3:493207061005:layer:AWS-AppConfig-Extension:162
+    eu-north-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-north-1:646970417810:layer:AWS-AppConfig-Extension:259
+    eu-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:eu-south-1:203683718741:layer:AWS-AppConfig-Extension:140
+    eu-south-2:
+      AppConfigLayerArn: arn:aws:lambda:eu-south-2:586093569114:layer:AWS-AppConfig-Extension:102
+    eu-central-2:
+      AppConfigLayerArn: arn:aws:lambda:eu-central-2:758369105281:layer:AWS-AppConfig-Extension:106
+    cn-north-1: 
+      AppConfigLayerArn: arn:aws-cn:lambda:cn-north-1:615057806174:layer:AWS-AppConfig-Extension:133
+    cn-northwest-1: 
+      AppConfigLayerArn: arn:aws-cn:lambda:cn-northwest-1:615084187847:layer:AWS-AppConfig-Extension:131
+    ap-east-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-east-1:630222743974:layer:AWS-AppConfig-Extension:142
+    ap-northeast-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-1:980059726660:layer:AWS-AppConfig-Extension:155
+    ap-northeast-3: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-3:706869817123:layer:AWS-AppConfig-Extension:159
+    ap-northeast-2: 
+      AppConfigLayerArn: arn:aws:lambda:ap-northeast-2:826293736237:layer:AWS-AppConfig-Extension:165
+    ap-southeast-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-1:421114256042:layer:AWS-AppConfig-Extension:156
+    ap-southeast-3:
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-3:418787028745:layer:AWS-AppConfig-Extension:150
+    ap-southeast-4:
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-4:307021474294:layer:AWS-AppConfig-Extension:78
+    ap-southeast-5:
+      AppConfigLayerArn: arn:aws:lambda:ap-southeast-5:631746059939:layer:AWS-AppConfig-Extension:55
+    ap-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:ap-south-1:554480029851:layer:AWS-AppConfig-Extension:175
+    ap-south-2:
+      AppConfigLayerArn: arn:aws:lambda:ap-south-2:489524808438:layer:AWS-AppConfig-Extension:104
+    sa-east-1: 
+      AppConfigLayerArn: arn:aws:lambda:sa-east-1:000010852771:layer:AWS-AppConfig-Extension:215
+    af-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:af-south-1:574348263942:layer:AWS-AppConfig-Extension:152
+    me-south-1: 
+      AppConfigLayerArn: arn:aws:lambda:me-south-1:559955524753:layer:AWS-AppConfig-Extension:154
+    me-central-1:
+      AppConfigLayerArn: arn:aws:lambda:me-central-1:662846165436:layer:AWS-AppConfig-Extension:120
+    il-central-1:
+      AppConfigLayerArn: arn:aws:lambda:il-central-1:895787185223:layer:AWS-AppConfig-Extension:81
+    ca-west-1:
+      AppConfigLayerArn: arn:aws:lambda:ca-west-1:436199621743:layer:AWS-AppConfig-Extension:57
+    us-gov-east-1:
+      AppConfigLayerArn: arn:aws-us-gov:lambda:us-gov-east-1:946561847325:layer:AWS-AppConfig-Extension:110
+    us-gov-west-1:
+      AppConfigLayerArn: arn:aws-us-gov:lambda:us-gov-west-1:946746059096:layer:AWS-AppConfig-Extension:110
